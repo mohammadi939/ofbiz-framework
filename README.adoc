@@ -33,6 +33,8 @@ image:https://qpkb254zxeu.montastic.io/badge[link=https://qpkb254zxeu.montastic.
 image:https://github.com/apache/ofbiz-framework/actions/workflows/scorecard.yml/badge.svg[https://github.com/apache/ofbiz-framework/actions/workflows/scorecard.yml]
 image:https://api.securityscorecards.dev/projects/github.com/apache/ofbiz-framework/badge[link=https://securityscorecards.dev/viewer/?uri=github.com/apache/ofbiz-framework]
 image:https://www.bestpractices.dev/projects/8708/badge[link=https://www.bestpractices.dev/projects/8708]
+
+
 If you are reading this file in AsciiDoc format you may want to see it in
 https://nightlies.apache.org/ofbiz/stable/readme/html5/[HTML]
 //or https://nightlies.apache.org/ofbiz/stable/readme/pdf/[HTML] +[PDF] format Not Ready Yet see
