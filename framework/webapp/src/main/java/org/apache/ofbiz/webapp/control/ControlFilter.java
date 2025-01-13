@@ -138,7 +138,7 @@ public class ControlFilter implements Filter {
         if (httpRequest.getAttribute(FORWARDED_FROM_SERVLET) == null && !allowedPaths.isEmpty()) {
             // check to make sure the requested url is allowed
             // get the request URI without the webapp mount point
-            String requestUri = httpRequest.getRequestURI().substring(httpRequest.getContextPath().length());
+            String requestUri = URLDecoder.decode(httpRequest.getRequestURI().substring(httpRequest.getContextPath().length()), "UTF-8");
 
             // Reject wrong URLs
             String queryString = httpRequest.getQueryString();
