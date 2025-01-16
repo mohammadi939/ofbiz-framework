@@ -22,7 +22,10 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import javax.servlet.Filter;
@@ -34,7 +37,10 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.ofbiz.base.crypto.HashCrypt;
 import org.apache.ofbiz.base.util.Debug;
+import org.apache.ofbiz.base.util.StringUtil;
+import org.apache.ofbiz.base.util.UtilProperties;
 import org.apache.ofbiz.base.util.UtilValidate;
 import org.apache.ofbiz.entity.GenericValue;
 import org.apache.ofbiz.security.SecuredUpload;
@@ -76,6 +82,7 @@ public class ControlFilter implements Filter {
     private String redirectPath;
     protected int errorCode;
     private Set<String> allowedPaths = new HashSet<>();
+    private static final List<String> ALLOWEDTOKENS = getAllowedTokens();
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
@@ -140,29 +147,45 @@ public class ControlFilter implements Filter {
             // get the request URI without the webapp mount point
             String requestUri = URLDecoder.decode(httpRequest.getRequestURI().substring(httpRequest.getContextPath().length()), "UTF-8");
 
+
             // Reject wrong URLs
-            String queryString = httpRequest.getQueryString();
+            String queryString = null;
+            try {
+                queryString = new URI(requestUri).getQuery();
+
+            } catch (URISyntaxException e) {
+                Debug.logError("Weird URI: " + e, module);
+                throw new RuntimeException(e);
+            }
+
             if (queryString != null) {
                 queryString = URLDecoder.decode(queryString, "UTF-8");
                 if (UtilValidate.isUrl(queryString)
-                        || !SecuredUpload.isValidText(queryString.toLowerCase(), SecuredUpload.getallowedTokens(), true)
-                        && isSolrTest()) {
+                        || !SecuredUpload.isValidText(queryString.toLowerCase(), ALLOWEDTOKENS, true)
+                            && isSolrTest()) {
                     Debug.logError("For security reason this URL is not accepted", module);
                     throw new RuntimeException("For security reason this URL is not accepted");
                 }
             }
+
             if (!requestUri.matches("/control/logout;jsessionid=[A-Z0-9]{32}\\.jvm1")) {
-                try {
-                    String url = new URI(((HttpServletRequest) request).getRequestURL().toString())
-                            .normalize().toString()
-                            .replaceAll(";", "")
-                            .replaceAll("(?i)%2e", "");
-                    if (!((HttpServletRequest) request).getRequestURL().toString().equals(url)) {
-                        Debug.logError("For security reason this URL is not accepted", module);
-                        throw new RuntimeException("For security reason this URL is not accepted");
+                boolean bypass = true;
+                if (queryString != null) {
+                    bypass = isAnyAllowedToken(StringUtil.split(queryString.toLowerCase(), "Y&amp;"), ALLOWEDTOKENS);
+                }
+                if (requestUri != null && !bypass) { // "null" allows tests with Mockito. ControlFilterTests sends null.
+                    try {
+                        String url = new URI(((HttpServletRequest) request).getRequestURL().toString())
+                                .normalize().toString()
+                                .replaceAll(";", "")
+                                .replaceAll("(?i)%2e", "");
+                        if (!((HttpServletRequest) request).getRequestURL().toString().equals(url)) {
+                            Debug.logError("For security reason this URL is not accepted", module);
+                            throw new RuntimeException("For security reason this URL is not accepted");
+                        }
+                    } catch (URISyntaxException e) {
+                        throw new RuntimeException(e);
                     }
-                } catch (URISyntaxException e) {
-                    throw new RuntimeException(e);
                 }
             }
 
@@ -208,5 +231,25 @@ public class ControlFilter implements Filter {
     @Override
     public void destroy() {
 
+    }
+
+    private static List<String> getAllowedTokens() {
+        String allowedTokens = UtilProperties.getPropertyValue("security", "allowedTokens");
+        return UtilValidate.isNotEmpty(allowedTokens) ? StringUtil.split(allowedTokens, ",") : new ArrayList<>();
+    }
+
+    // Check there is any allowedToken in URL
+    private static boolean isAnyAllowedToken(List<String> queryParameters, List<String> allowed) {
+        boolean isOK = false;
+        for (String parameter : queryParameters) {
+            parameter = parameter.substring(0, parameter.indexOf("=") + 1);
+            if (allowed.contains(HashCrypt.cryptBytes("SHA", "OFBiz", parameter.getBytes(StandardCharsets.UTF_8)))) {
+                isOK = true;
+                break;
+            } else {
+                continue;
+            }
+        }
+        return isOK;
     }
 }
