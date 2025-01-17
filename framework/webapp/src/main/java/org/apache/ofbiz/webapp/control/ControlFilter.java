@@ -171,11 +171,12 @@ public class ControlFilter implements Filter {
             if (!requestUri.matches("/control/logout;jsessionid=[A-Z0-9]{32}\\.jvm1")) {
                 boolean bypass = true;
                 if (queryString != null) {
-                    bypass = isAnyAllowedToken(StringUtil.split(queryString.toLowerCase(), "Y&amp;"), ALLOWEDTOKENS);
+                    List<String> queryStringList = StringUtil.splitWithStringSeparator(queryString.toLowerCase(), "&amp;");
+                    bypass = isAnyAllowedToken(queryStringList, ALLOWEDTOKENS);
                 }
                 if (requestUri != null && !bypass) { // "null" allows tests with Mockito. ControlFilterTests sends null.
                     try {
-                        String url = new URI(((HttpServletRequest) request).getRequestURL().toString())
+                        String url = new URI(requestUri)
                                 .normalize().toString()
                                 .replaceAll(";", "")
                                 .replaceAll("(?i)%2e", "");
