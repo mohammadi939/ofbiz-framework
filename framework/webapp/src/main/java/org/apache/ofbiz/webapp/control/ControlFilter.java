@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -37,7 +36,7 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.ofbiz.base.crypto.HashCrypt;
+import org.apache.commons.text.StringEscapeUtils;
 import org.apache.ofbiz.base.util.Debug;
 import org.apache.ofbiz.base.util.StringUtil;
 import org.apache.ofbiz.base.util.UtilProperties;
@@ -118,6 +117,12 @@ public class ControlFilter implements Filter {
         return !GenericValue.getStackTraceAsString().contains("ControlFilterTests")
                 && null == System.getProperty("SolrDispatchFilter");
     }
+
+    private static List<String> getAllowedTokens() {
+        String allowedTokens = UtilProperties.getPropertyValue("security", "allowedTokens");
+        return UtilValidate.isNotEmpty(allowedTokens) ? StringUtil.split(allowedTokens, ",") : new ArrayList<>();
+    }
+
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         HttpServletRequest httpRequest = (HttpServletRequest) request;
@@ -145,8 +150,7 @@ public class ControlFilter implements Filter {
         if (httpRequest.getAttribute(FORWARDED_FROM_SERVLET) == null && !allowedPaths.isEmpty()) {
             // check to make sure the requested url is allowed
             // get the request URI without the webapp mount point
-            String requestUri = URLDecoder.decode(httpRequest.getRequestURI().substring(httpRequest.getContextPath().length()), "UTF-8");
-
+            String requestUri = StringEscapeUtils.unescapeHtml4(URLDecoder.decode(httpRequest.getRequestURI().substring(httpRequest.getContextPath().length()), "UTF-8"));
 
             // Reject wrong URLs
             String queryString = null;
@@ -169,18 +173,13 @@ public class ControlFilter implements Filter {
             }
 
             if (!requestUri.matches("/control/logout;jsessionid=[A-Z0-9]{32}\\.jvm1")) {
-                boolean bypass = true;
-                if (queryString != null) {
-                    List<String> queryStringList = StringUtil.splitWithStringSeparator(queryString.toLowerCase(), "&amp;");
-                    bypass = isAnyAllowedToken(queryStringList, ALLOWEDTOKENS);
-                }
-                if (requestUri != null && !bypass) { // "null" allows tests with Mockito. ControlFilterTests sends null.
+                if (requestUri != null) { // "null" allows tests with Mockito because ControlFilterTests sends null.
                     try {
                         String url = new URI(requestUri)
                                 .normalize().toString()
                                 .replaceAll(";", "")
                                 .replaceAll("(?i)%2e", "");
-                        if (!((HttpServletRequest) request).getRequestURL().toString().equals(url)) {
+                        if (!requestUri.toString().equals(url)) {
                             Debug.logError("For security reason this URL is not accepted", module);
                             throw new RuntimeException("For security reason this URL is not accepted");
                         }
@@ -232,25 +231,5 @@ public class ControlFilter implements Filter {
     @Override
     public void destroy() {
 
-    }
-
-    private static List<String> getAllowedTokens() {
-        String allowedTokens = UtilProperties.getPropertyValue("security", "allowedTokens");
-        return UtilValidate.isNotEmpty(allowedTokens) ? StringUtil.split(allowedTokens, ",") : new ArrayList<>();
-    }
-
-    // Check there is any allowedToken in URL
-    private static boolean isAnyAllowedToken(List<String> queryParameters, List<String> allowed) {
-        boolean isOK = false;
-        for (String parameter : queryParameters) {
-            parameter = parameter.substring(0, parameter.indexOf("=") + 1);
-            if (allowed.contains(HashCrypt.cryptBytes("SHA", "OFBiz", parameter.getBytes(StandardCharsets.UTF_8)))) {
-                isOK = true;
-                break;
-            } else {
-                continue;
-            }
-        }
-        return isOK;
     }
 }
