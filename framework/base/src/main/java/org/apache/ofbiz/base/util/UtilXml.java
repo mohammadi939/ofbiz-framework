@@ -403,9 +403,12 @@ public final class UtilXml {
 
     public static Document readXmlDocument(URL url, boolean validate, boolean withPosition)
             throws SAXException, ParserConfigurationException, java.io.IOException {
-        if (url == null) {
-            Debug.logWarning("[UtilXml.readXmlDocument] URL was null, doing nothing", module);
-            return null;
+
+        if (!hostHeadersAllowed.contains(url.getHost())) {
+            Debug.logWarning("Domain " + url.getHost() + " not accepted to prevent host header injection."
+                    + " You need to set host-headers-allowed property in security.properties file.", MODULE);
+            throw new IOException("Domain " + url.getHost() + " not accepted to prevent host header injection."
+                    + " You need to set host-headers-allowed property in security.properties file.");
         }
         InputStream is = url.openStream();
         Document document = readXmlDocument(is, validate, url.toString(), withPosition);
