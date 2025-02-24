@@ -91,7 +91,7 @@ public final class UtilXml {
     public static final String module = UtilXml.class.getName();
     private static final XStream xstream = createXStream();
     private UtilXml () {}
-    private final static List<String> hostHeadersAllowed = UtilMisc.getHostHeadersAllowed();
+    private static final List<String> HOSTHEADERSALLOWED = UtilMisc.getHostHeadersAllowed();
 
     private static XStream createXStream() {
         XStream xstream = new XStream();
@@ -405,7 +405,8 @@ public final class UtilXml {
     public static Document readXmlDocument(URL url, boolean validate, boolean withPosition)
             throws SAXException, ParserConfigurationException, java.io.IOException {
 
-        if (!hostHeadersAllowed.contains(url.getHost())) {
+        // url.getHost().isEmpty() when reading an XML file
+        if (!HOSTHEADERSALLOWED.contains(url.getHost()) && !url.getHost().isEmpty()) {
             Debug.logWarning("Domain " + url.getHost() + " not accepted to prevent host header injection."
                     + " You need to set host-headers-allowed property in security.properties file.", module);
             throw new IOException("Domain " + url.getHost() + " not accepted to prevent host header injection."
