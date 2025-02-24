@@ -91,18 +91,19 @@ public final class UtilXml {
     public static final String module = UtilXml.class.getName();
     private static final XStream xstream = createXStream();
     private UtilXml () {}
+    private final static List<String> hostHeadersAllowed = UtilMisc.getHostHeadersAllowed();
 
     private static XStream createXStream() {
         XStream xstream = new XStream();
-        /* This method is a pure helper method for XStream 1.4.x. 
+        /* This method is a pure helper method for XStream 1.4.x.
          * It initializes an XStream instance with a white list of well-known and simply types of the Java runtime
          *  as it is done in XStream 1.5.x by default. This method will do therefore nothing in XStream 1.5
-         *  and could be removed them  
-         */ 
-        XStream.setupDefaultSecurity(xstream); 
-        /* You may want to enhance the white list created by XStream::setupDefaultSecurity (or by default with XStream 1.5) 
+         *  and could be removed them
+         */
+        XStream.setupDefaultSecurity(xstream);
+        /* You may want to enhance the white list created by XStream::setupDefaultSecurity (or by default with XStream 1.5)
          * using xstream::allowTypesByWildcard with your own classes
-         */  
+         */
         return xstream;
     }
 
@@ -406,7 +407,7 @@ public final class UtilXml {
 
         if (!hostHeadersAllowed.contains(url.getHost())) {
             Debug.logWarning("Domain " + url.getHost() + " not accepted to prevent host header injection."
-                    + " You need to set host-headers-allowed property in security.properties file.", MODULE);
+                    + " You need to set host-headers-allowed property in security.properties file.", module);
             throw new IOException("Domain " + url.getHost() + " not accepted to prevent host header injection."
                     + " You need to set host-headers-allowed property in security.properties file.");
         }
@@ -1059,7 +1060,8 @@ public final class UtilXml {
          * @param systemId - System ID of DTD
          * @return InputSource of DTD
          */
-        public InputSource resolveEntity(String publicId, String systemId) throws SAXException, IOException {
+        @Override
+		public InputSource resolveEntity(String publicId, String systemId) throws SAXException, IOException {
             hasDTD = false;
             String dtd = UtilProperties.getSplitPropertyValue(UtilURL.fromResource("localdtds.properties"), publicId);
             if (UtilValidate.isNotEmpty(dtd)) {
@@ -1141,7 +1143,8 @@ public final class UtilXml {
             this.localResolver = localResolver;
         }
 
-        public void error(SAXParseException exception) {
+        @Override
+		public void error(SAXParseException exception) {
             String exceptionMessage = exception.getMessage();
             Pattern valueFlexExpr = Pattern.compile("value '\\$\\{.*\\}'");
             Matcher matcher = valueFlexExpr.matcher(exceptionMessage.toLowerCase());
@@ -1156,7 +1159,8 @@ public final class UtilXml {
             }
         }
 
-        public void fatalError(SAXParseException exception) {
+        @Override
+		public void fatalError(SAXParseException exception) {
             if (localResolver.hasDTD()) {
                 Debug.logError("XmlFileLoader: File "
                     + docDescription
@@ -1168,7 +1172,8 @@ public final class UtilXml {
             }
         }
 
-        public void warning(SAXParseException exception) {
+        @Override
+		public void warning(SAXParseException exception) {
             if (localResolver.hasDTD()) {
                 Debug.logError("XmlFileLoader: File "
                     + docDescription
@@ -1183,7 +1188,7 @@ public final class UtilXml {
 
     /** This method is now useless
      * Enhance rather the white list created by XStream::setupDefaultSecurity
-     * using xstream::allowTypesByWildcard with your own classes  
+     * using xstream::allowTypesByWildcard with your own classes
      */
     @Deprecated
     private static class UnsupportedClassConverter implements Converter {
@@ -1228,7 +1233,7 @@ public final class UtilXml {
      * get tag name without any prefix
      * @param element
      * @return tagName
-     */ 
+     */
     public static String getTagNameIgnorePrefix(Element element){
         if (element==null) {
             return null;
