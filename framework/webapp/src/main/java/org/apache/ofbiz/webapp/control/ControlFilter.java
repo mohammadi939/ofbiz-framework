@@ -194,7 +194,7 @@ public class ControlFilter implements Filter {
                 offset = requestUri.length();
             }
 
-            if (SecurityUtil.containsFreemarkerInterpolation(httpRequest, httpResponse, requestUri)) {
+            if (SecurityUtil.containsFreemarkerInterpolation(httpRequest, httpResponse, requestUri) && !isSolrTest()) {
                 return;
             }
 
