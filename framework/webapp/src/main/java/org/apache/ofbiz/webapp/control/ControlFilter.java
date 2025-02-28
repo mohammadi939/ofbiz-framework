@@ -113,7 +113,7 @@ public class ControlFilter implements Filter {
         }
     }
 
-    private static boolean isSolrTest() {
+    private static boolean isSolrTest() { // Allows Solr tests
         return !GenericValue.getStackTraceAsString().contains("ControlFilterTests")
                 && null == System.getProperty("SolrDispatchFilter");
     }
@@ -194,10 +194,13 @@ public class ControlFilter implements Filter {
                 offset = requestUri.length();
             }
 
+            if (SecurityUtil.containsFreemarkerInterpolation(httpRequest, httpResponse, requestUri)) {
+                return;
+            }
+
             GenericValue userLogin = (GenericValue) httpRequest.getSession().getAttribute("userLogin");
             if (!LoginWorker.hasBasePermission(userLogin, httpRequest)) { // Allows UEL and FlexibleString (OFBIZ-12602)
-                if (isSolrTest() // Allows Solr tests
-                    && SecurityUtil.containsFreemarkerInterpolation(httpRequest, httpResponse, requestUri)) {
+                if (isSolrTest()) {
                     return;
                 }
             }
