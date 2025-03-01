@@ -46,7 +46,7 @@ import org.apache.ofbiz.security.SecuredUpload;
 import org.apache.ofbiz.security.SecurityUtil;
 
 /*
- * A Filter used to specify a whitelist of allowed paths to the OFBiz application.
+ * A Filter used to specify an allowedlist of paths to the OFBiz application.
  * Requests that do not match any of the paths listed in allowedPaths are redirected to redirectPath, or an error code
  * is returned (the error code can be set in errorCode, the default value is 403).
  * If forceRedirectAll is set to Y then allowedPaths is ignored and all requests are redirected to redirectPath; note
@@ -66,7 +66,7 @@ import org.apache.ofbiz.security.SecurityUtil;
  *   - for its internal logic (to avoid an infinite loop of redirections when forceRedirectAll is set) the filter sets
  *     a session parameter (_FORCE_REDIRECT_=true) before the first redirection; the parameter is removed during the
  *     second pass before the request is forwarded to the next filter in the chain
- *   - the filter skips the check against the whitelist of allowed paths if a request attribute
+ *   - the filter skips the check against the allowedlist of paths if a request attribute
  *     with name _FORWARDED_FROM_SERVLET_ is present; this attribute is typically set by the ControlServlet to indicate
  *     that the request path is safe and should not be checked again
  */
@@ -114,8 +114,7 @@ public class ControlFilter implements Filter {
     }
 
     private static boolean isSolrTest() { // Allows Solr tests
-        return !GenericValue.getStackTraceAsString().contains("ControlFilterTests")
-                && null == System.getProperty("SolrDispatchFilter");
+        return null != System.getProperty("SolrDispatchFilter");
     }
 
     private static List<String> getAllowedTokens() {
@@ -152,7 +151,15 @@ public class ControlFilter implements Filter {
             // get the request URI without the webapp mount point
             String requestUri = StringEscapeUtils.unescapeHtml4(URLDecoder.decode(httpRequest.getRequestURI().substring(httpRequest.getContextPath().length()), "UTF-8"));
 
+
             // Reject wrong URLs
+
+            if (!isSolrTest()) {
+                if (SecurityUtil.containsFreemarkerInterpolation(httpRequest, httpResponse, requestUri)) {
+                    return;
+                }
+            }
+
             String queryString = null;
             try {
                 queryString = new URI(requestUri).getQuery();
@@ -194,13 +201,9 @@ public class ControlFilter implements Filter {
                 offset = requestUri.length();
             }
 
-            if (SecurityUtil.containsFreemarkerInterpolation(httpRequest, httpResponse, requestUri) && !isSolrTest()) {
-                return;
-            }
-
             GenericValue userLogin = (GenericValue) httpRequest.getSession().getAttribute("userLogin");
             if (!LoginWorker.hasBasePermission(userLogin, httpRequest)) { // Allows UEL and FlexibleString (OFBIZ-12602)
-                if (isSolrTest()) {
+                if (isSolrTest()) { // Allows Solr tests
                     return;
                 }
             }
