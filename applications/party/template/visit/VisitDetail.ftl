@@ -69,7 +69,7 @@ under the License.
         </tr>
         <tr>
           <td class="label">${uiLabelMap.PartyInitialReferer}</td>
-          <#assign isUrl = Static["org.apache.ofbiz.base.util.UtilValidate"].isUrlInString(visit.initialReferrer)>
+          <#assign isUrl = Static["org.apache.ofbiz.base.util.UtilValidate"].isUrl(visit.initialReferrer)>
           <#if isUrl>
               <td><a href="${visit.initialReferrer!}" >${visit.initialReferrer!}</a></td>
           <#else>
