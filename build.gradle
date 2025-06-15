@@ -212,7 +212,10 @@ allprojects {
         maven {
             url "https://artifacts.alfresco.com/nexus/content/repositories/public/"
         }
-
+        /* maven {
+            // To test not released FreeMarker versions
+            url "https://repository.apache.org/content/repositories/snapshots/"
+        } */
     }
 }
 
