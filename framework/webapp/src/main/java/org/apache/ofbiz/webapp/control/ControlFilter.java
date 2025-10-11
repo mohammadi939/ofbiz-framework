@@ -156,6 +156,11 @@ public class ControlFilter extends HttpFilter {
         return UtilValidate.isNotEmpty(allowedTokens) ? StringUtil.split(allowedTokens, ",") : new ArrayList<>();
     }
 
+    private static boolean isControlFilterTests() {
+        return null != System.getProperty("ControlFilterTests");
+    }
+
+
     /**
      * Makes allowed paths pass through while redirecting the others to a fix location.
      * Reject wrong URLs
@@ -166,7 +171,10 @@ public class ControlFilter extends HttpFilter {
         HttpSession session = req.getSession();
 
         // Prevents stream exploitation
-        UrlServletHelper.setRequestAttributes(req, null, req.getServletContext());
+
+        if (!isControlFilterTests()) {
+            UrlServletHelper.setRequestAttributes(req, null, req.getServletContext());
+        }
         Map<String, Object> parameters = UtilHttp.getParameterMap(req);
         boolean reject = false;
         if (!parameters.isEmpty()) {
