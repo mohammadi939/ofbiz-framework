@@ -170,33 +170,32 @@ public class ControlFilter extends HttpFilter {
         String context = req.getContextPath();
         HttpSession session = req.getSession();
 
-        // Prevents stream exploitation
-
         if (!isControlFilterTests()) {
+            // Prevents stream exploitation
             UrlServletHelper.setRequestAttributes(req, null, req.getServletContext());
-        }
-        Map<String, Object> parameters = UtilHttp.getParameterMap(req);
-        boolean reject = false;
-        if (!parameters.isEmpty()) {
-            for (String key : parameters.keySet()) {
-                Object object = parameters.get(key);
-                if (object.getClass().equals(String.class)
-                        || object instanceof Collection) {
-                    try {
-                        List<String> toCheck = object.getClass().equals(String.class)
-                                ? List.of((String) object)
-                                : UtilGenerics.checkCollection(object, String.class);
-                        reject = toCheck.stream()
-                                .anyMatch(val -> val.contains("<"));
-                    } catch (IllegalArgumentException e) {
-                        Debug.logWarning(e, MODULE);
-                        reject = true;
+            Map<String, Object> parameters = UtilHttp.getParameterMap(req);
+            boolean reject = false;
+            if (!parameters.isEmpty()) {
+                for (String key : parameters.keySet()) {
+                    Object object = parameters.get(key);
+                    if (object.getClass().equals(String.class)
+                            || object instanceof Collection) {
+                        try {
+                            List<String> toCheck = object.getClass().equals(String.class)
+                                    ? List.of((String) object)
+                                            : UtilGenerics.checkCollection(object, String.class);
+                            reject = toCheck.stream()
+                                    .anyMatch(val -> val.contains("<"));
+                        } catch (IllegalArgumentException e) {
+                            Debug.logWarning(e, MODULE);
+                            reject = true;
+                        }
                     }
                 }
-            }
-            if (reject) {
-                Debug.logError("For security reason this URL is not accepted", MODULE);
-                throw new RuntimeException("For security reason this URL is not accepted");
+                if (reject) {
+                    Debug.logError("For security reason this URL is not accepted", MODULE);
+                    throw new RuntimeException("For security reason this URL is not accepted");
+                }
             }
         }
 
