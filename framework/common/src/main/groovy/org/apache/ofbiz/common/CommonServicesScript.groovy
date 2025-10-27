@@ -20,13 +20,10 @@ package org.apache.ofbiz.common
 
 import java.math.RoundingMode
 import java.sql.Timestamp
-import java.text.SimpleDateFormat
 
 import org.apache.ofbiz.base.util.UtilDateTime
 import org.apache.ofbiz.base.util.UtilProperties
 import org.apache.ofbiz.entity.GenericValue
-import org.apache.ofbiz.service.ModelService
-import org.apache.ofbiz.service.ServiceUtil
 import org.apache.ofbiz.webapp.event.FileUploadProgressListener
 
 /**
