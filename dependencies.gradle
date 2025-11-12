@@ -26,7 +26,7 @@ dependencies {
     implementation 'com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20240325.1'
     implementation 'com.googlecode.libphonenumber:libphonenumber:8.13.52'
     implementation 'com.ibm.icu:icu4j:76.1'
-    implementation 'com.github.librepdf:openpdf:1.3.43'
+    implementation 'com.github.librepdf:openpdf:1.3.43' // This is the last version with com.lowagie.text that is used (only) by PdfSurveyServices class.
     implementation 'com.sun.mail:javax.mail:1.6.2'
     implementation 'com.rometools:rome:2.1.0'
     implementation 'com.thoughtworks.xstream:xstream:1.4.21'
