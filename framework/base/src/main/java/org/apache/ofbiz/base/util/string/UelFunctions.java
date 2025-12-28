@@ -245,6 +245,10 @@ public class UelFunctions {
         return dateFormat.format(stamp);
     }
 
+    public static String persianDateString(Timestamp stamp, TimeZone timeZone, Locale locale) {
+        return UtilDateTime.formatPersianDate(stamp, null, timeZone, locale);
+    }
+
     public static int getSize(Object obj) {
         if (null == obj) return 0;
         if (obj instanceof Map) {
@@ -486,6 +490,8 @@ public class UelFunctions {
                 this.functionMap.put("date:localizedDateTimeStr", UelFunctions.class.getMethod("localizedDateTimeString", Timestamp.class,
                         TimeZone.class, Locale.class));
                 this.functionMap.put("date:timeStr", UelFunctions.class.getMethod("timeString", Timestamp.class, TimeZone.class, Locale.class));
+                this.functionMap.put("date:persianDateStr", UelFunctions.class.getMethod("persianDateString", Timestamp.class, TimeZone.class,
+                        Locale.class));
                 this.functionMap.put("date:nowTimestamp", UtilDateTime.class.getMethod("nowTimestamp"));
                 this.functionMap.put("math:absDouble", Math.class.getMethod("abs", double.class));
                 this.functionMap.put("math:absFloat", Math.class.getMethod("abs", float.class));

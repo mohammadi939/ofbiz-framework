@@ -329,6 +329,18 @@ public final class UtilFormatOut {
         return UtilDateTime.toDateFormat(dateTimeFormat, timeZone, locale).format(date);
     }
 
+    /** Formats a <code>Date</code> into a Persian date-only <code>String</code> using the specified locale and time zone,
+     * or using the specified format.
+     * @param date The date to format
+     * @param dateTimeFormat Optional format string
+     * @param locale The format locale - can be <code>null</code> if <code>dateFormat</code> is not <code>null</code>
+     * @param timeZone The format time zone
+     * @return <code>date</code> formatted as a Persian date-only <code>String</code>
+     */
+    public static String formatPersianDate(Date date, String dateTimeFormat, Locale locale, TimeZone timeZone) {
+        return UtilDateTime.formatPersianDate(date, dateTimeFormat, timeZone, locale);
+    }
+
     /** Formats a <code>Date</code> into a date-time <code>String</code> using the specified locale and time zone,
      * or using the specified format.
      * @param date The date to format

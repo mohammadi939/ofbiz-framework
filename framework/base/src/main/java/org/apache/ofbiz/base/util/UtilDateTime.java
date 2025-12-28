@@ -62,6 +62,7 @@ public final class UtilDateTime {
      * JDBC escape format for java.sql.Time conversions.
      */
     private static final String TIME_FORMAT = "HH:mm:ss";
+    private static final String PERSIAN_DATE_FORMAT = "yyyy/MM/dd";
 
     private UtilDateTime() { }
 
@@ -205,6 +206,22 @@ public final class UtilDateTime {
      */
     public static java.util.Date nowDate() {
         return new java.util.Date();
+    }
+
+    public static String formatPersianDate(Date date, String dateFormat, TimeZone timeZone, Locale locale) {
+        if (date == null) {
+            return "";
+        }
+        String pattern = UtilValidate.isEmpty(dateFormat) ? PERSIAN_DATE_FORMAT : dateFormat;
+        Locale formatLocale = locale != null ? locale : Locale.getDefault();
+        TimeZone javaTimeZone = timeZone != null ? timeZone : TimeZone.getDefault();
+        com.ibm.icu.text.SimpleDateFormat formatter = new com.ibm.icu.text.SimpleDateFormat(pattern, formatLocale);
+        com.ibm.icu.util.TimeZone icuTimeZone = com.ibm.icu.util.TimeZone.getTimeZone(javaTimeZone.getID());
+        com.ibm.icu.util.PersianCalendar calendar = new com.ibm.icu.util.PersianCalendar(formatLocale);
+        calendar.setTimeZone(icuTimeZone);
+        formatter.setCalendar(calendar);
+        formatter.setTimeZone(icuTimeZone);
+        return formatter.format(date);
     }
 
     public static java.sql.Timestamp getDayStart(java.sql.Timestamp stamp) {
